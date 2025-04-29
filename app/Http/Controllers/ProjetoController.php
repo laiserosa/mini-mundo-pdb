@@ -9,8 +9,23 @@ class ProjetoController extends Controller
 {
     public function index()
     {
-        $projetos = Projeto::all();
-        return response()->json($projetos);
+        dd(auth()->user(), 'auth user');
+        try {
+            $projetos = Projeto::all();
+            return response()->json($projetos);
+        } catch (\Exception $e) {
+            return response()->json(['erro' => $e->getMessage()], 401);
+        }
+
+        // $user = auth()->user();
+        // if (!$user) {
+        //     return response()->json(['erro' => 'Usuário não autenticado'], 401);
+        // }
+
+        // return response()->json([
+        //     'usuario' => $user,
+        //     'projetos' => Projeto::all()
+        // ]);
     }
 
     public function store(Request $request)

@@ -22,6 +22,7 @@
     <script>
         async function carregarProjetos() {
             const token = jwt.getToken();
+            console.log('token inicio', token);
             if (!token) {
                 window.location.href = "/login";
                 return;
@@ -32,7 +33,27 @@
                     'Authorization': 'Bearer ' + token
                 }
             });
+            
 
+            const contentType = response.headers.get('content-type') || '';
+            console.log('Tipo de resposta:', contentType);
+            console.log('Response:', response);
+
+            if (response.status === 401) {
+                alert('Sessão expirada. Faça login novamente.');
+                window.location.href = "/login";
+                return;
+            }
+
+            if (!contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Resposta não é JSON válida. Conteúdo:', text);
+                alert('Erro inesperado. Faça login novamente.');
+                window.location.href = "/login";
+                return;
+            }
+
+            
             if (response.ok) {
                 const projetos = await response.json();
                 const tbody = document.querySelector("#tabela-projetos tbody");
