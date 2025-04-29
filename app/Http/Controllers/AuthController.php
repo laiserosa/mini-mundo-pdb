@@ -12,9 +12,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $acesso = $request->only('cpf', 'senha');
-
         $usuario = Usuario::where('cpf', $acesso['cpf'])->first();
-        // dd($usuario, Usuario::all());
+        
         if (!$usuario || !Hash::check($acesso['senha'], $usuario->senha)) {
             return response()->json(['message' => 'CPF ou senha inválidos'], 401);
         }
