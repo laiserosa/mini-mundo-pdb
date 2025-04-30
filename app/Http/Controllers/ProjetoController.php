@@ -25,15 +25,10 @@ class ProjetoController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255|unique:projetos,nome',
             'descricao' => 'nullable|string',
-            'status' => 'required|in:Ativo,Inativo',
+            'status' => 'required|in:ativo,inativo',
             'orcamento' => 'nullable|numeric',
         ]);
 
-        if (isset($validated['orcamento'])) {
-            $orcamento = floatval(str_replace([',', 'R$', ' '], ['', '', ''], $validated['orcamento']));
-            $validated['orcamento'] = $orcamento;
-        }
-    
         try {
             $projeto = Projeto::create($validated);
             return response()->json($projeto, 201);
@@ -68,20 +63,14 @@ class ProjetoController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255|unique:projetos,nome,' . $id_projeto,
             'descricao' => 'nullable|string',
-            'status' => 'required|in:Ativo,Inativo',
+            'status' => 'required|in:ativo,inativo',
             'orcamento' => 'nullable|numeric',
         ]);
-    
+        
         $projeto = Projeto::find($id_projeto);
     
         if (!$projeto) {
             return response()->json(['message' => 'Projeto não encontrado'], 404);
-        }
-    
-        $orcamento = $request->input('orcamento');
-        if ($orcamento) {
-            // Remove a formatação monetária, se houver, e converte para float
-            $orcamento = floatval(str_replace([',', 'R$', ' '], ['', '', ''], $orcamento));
         }
 
         try {
@@ -89,7 +78,7 @@ class ProjetoController extends Controller
                 'nome' => $request->input('nome'),
                 'descricao' => $request->input('descricao'),
                 'status' => $request->input('status'),
-                'orcamento' => $orcamento,
+                'orcamento' => $request->input('orcamento'),
             ]);
             return response()->json($projeto);
         } catch (\Exception $e) {

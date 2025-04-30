@@ -11,23 +11,69 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $acesso = $request->only('cpf', 'senha');
-        $usuario = Usuario::where('cpf', $acesso['cpf'])->first();
-        
-        if (!$usuario || !Hash::check($acesso['senha'], $usuario->senha)) {
+        $request->validate([
+            'cpf' => 'required|string',
+            'senha' => 'required|string',
+        ]);
+    
+        $user = Usuario::where('cpf', $request->cpf)->first();
+        // dd(!$user, !Hash::check($request->senha, $user->senha));
+        if (!$user || !Hash::check($request->senha, $user->senha)) {
             return response()->json(['message' => 'CPF ou senha inválidos'], 401);
         }
-
-        $token = JWTAuth::fromUser($usuario);
-
+    
+        // $token = JWTAuth::fromUser($user);
+        $token = JWTAuth::claims([
+            'role' => $user->role,
+            'cpf' => $user->cpf,
+        ])->fromUser($user);
+        
         return response()->json([
             'token' => $token,
-            'usuario' => [
-                'id' => $usuario->id,
-                'nome' => $usuario->nome,
-                'cpf' => $usuario->cpf
-            ]
+            'usuario' => $user,
         ]);
+
+
+
+        // $credentials = $request->only('cpf', 'senha');
+        // $token = JWTAuth::attempt($credentials);
+        
+        // try {
+        //     if (!$token) {
+        //         return response()->json(['error' => 'CPF ou Senha inválidos!'], 401);
+        //     }
+
+        //     $user = auth()->user();
+        //     $token = JWTAuth::claims(['role' => $user->role])->fromUser($user);
+
+        //     return response()->json(compact('token'));
+        // } catch (JWTException $e) {
+        //     return response()->json(['error' => 'Não foi possível criar token'], 500);
+        // } catch (JWTException $e) {
+        //     return response()->json(['error' => 'Erro inesperado ao tentar realizar a autenticação.'], 500);
+        // }
+
+
+
+
+
+        // $acesso = $request->only('cpf', 'senha');
+        // $usuario = Usuario::where('cpf', $acesso['cpf'])->first();
+        
+        // if (!$usuario || !Hash::check($acesso['senha'], $usuario->senha)) {
+        //     return response()->json(['message' => 'CPF ou senha inválidos'], 401);
+        // }
+
+        // $token = JWTAuth::fromUser($usuario);
+
+        // return response()->json([
+        //     'token' => $token,
+        //     'usuario' => [
+        //         'id' => $usuario->id,
+        //         'nome' => $usuario->nome,
+        //         'cpf' => $usuario->cpf
+        //     ]
+        // ]);
     }
 
     public function logout(Request $request)

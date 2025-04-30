@@ -46,7 +46,8 @@
     <script src="{{ asset('js/jwt.js') }}"></script>
     <script>
         const token = jwt.getToken();
-        const apiUrl = '/api/projetos';
+        const apiUrl = `${window.location.origin}/api/projetos`;
+
 
         if (!token) window.location.href = "/login";
 
