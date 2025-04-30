@@ -6,11 +6,41 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
+
+        $credentials = $request->only('cpf', 'senha');
+        // $token = auth()->claims(['foo' => 'bar'])->attempt($credentials);
+        // Auth::login();
+        $usuario = Usuario::where('cpf', $credentials['cpf'])->first();
+        Auth::login($usuario);
+
+        $token = auth('api')->attempt($credentials);
+        $user = Auth::guard('api')->user(); // depois de um successful attempt
+        $token = JWTAuth::claims(['role' => $user->role])->fromUser($user);
+        // dd($token, 'çocorro');
+        if (!$token) {
+            return response()->json(['error' => 'Unauthorized..'], 401);
+        }
+
+        // return response()->json([
+        //     'token' => $token,
+        //     'usuario' => $user,
+        // ]);
+        return response()->json([
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
+        // return $this->respondWithToken($token);
+
+
+
+        /*
         $request->validate([
             'cpf' => 'required|string',
             'senha' => 'required|string',
@@ -32,7 +62,7 @@ class AuthController extends Controller
             'token' => $token,
             'usuario' => $user,
         ]);
-
+        */
 
 
         // $credentials = $request->only('cpf', 'senha');

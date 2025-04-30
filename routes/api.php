@@ -7,8 +7,8 @@ use App\Http\Controllers\TarefaController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware(['auth:api'])->group(function () {
-// Route::middleware(['auth.jwt'])->group(function () {
+// Route::middleware(['auth.api'])->group(function () {
+Route::middleware(['auth.jwt'])->group(function () {
     Route::get('/usuario', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
     

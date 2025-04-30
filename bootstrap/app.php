@@ -13,11 +13,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'auth.jwt' => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+            'auth.jwt' => \App\Http\Middleware\JWTMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, $request) {
-            return response()->json(['message' => 'Não autenticado.'], 401);
-        });
+        // $exceptions->render(function (AuthenticationException $e, Request $request) {
+        //     if ($request->is('api/*')) {
+        //         return response()->json([
+        //             'message' => $e->getMessage(),
+        //         ], 401);
+        //     }
+        // });
     })->create();

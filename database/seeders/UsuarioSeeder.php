@@ -16,12 +16,11 @@ class UsuarioSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('usuarios')->insert([
+        DB::table('users')->insert([
             [
                 'cpf' => '12345678901',
                 'nome' => 'Usuário 1',
                 'senha' => Hash::make('123'),
-                'token' => Str::random(60),
                 'role' => 'usuario',
                 'status' => 1,
                 'remember_token' => Str::random(10),
@@ -32,7 +31,6 @@ class UsuarioSeeder extends Seeder
                 'cpf' => '23456789012',
                 'nome' => 'Usuário 2',
                 'senha' => Hash::make('123'),
-                'token' => Str::random(60),
                 'role' => 'admin',
                 'status' => 1,
                 'remember_token' => Str::random(10),
@@ -43,7 +41,6 @@ class UsuarioSeeder extends Seeder
                 'cpf' => '34567890123',
                 'nome' => 'Usuário 3',
                 'senha' => Hash::make('123'),
-                'token' => Str::random(60),
                 'role' => 'usuario',
                 'status' => 1,
                 'remember_token' => Str::random(10),
