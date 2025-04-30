@@ -6,6 +6,11 @@ use App\Http\Controllers\ProjetoController;
 use App\Http\Controllers\TarefaController;
 
 Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/logout', [AuthController::class, 'logout']);//->middleware('auth:api');
+// Route::post('/saiu', function () {
+//     return response()->json(['message' => 'Logout realizado com sucesso'])
+//                      ->withCookie(cookie()->forget('token'));
+// });
 
 // Route::middleware(['auth.api'])->group(function () {
 Route::middleware(['auth.jwt'])->group(function () {

@@ -13,3 +13,8 @@ Route::get('/login', function () {
 Route::get('/projetos', function () {
     return view('projetos.index');
 })->name('projetos');
+
+
+Route::get('/saiu', function () {
+    return cookie()->forget('token');
+});

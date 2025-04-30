@@ -20,7 +20,7 @@ class UsuarioSeeder extends Seeder
             [
                 'cpf' => '12345678901',
                 'nome' => 'Usuário 1',
-                'senha' => Hash::make('123'),
+                'senha' => bcrypt('123'),
                 'role' => 'usuario',
                 'status' => 1,
                 'remember_token' => Str::random(10),
