@@ -34,6 +34,7 @@ class JWTMiddleware
                 ]);
                 return response()->json(['error' => 'Não autorizado'], 401);
             }
+            $request->merge(['role' => $payload['role']]);
 
         } catch (TokenExpiredException $e) {
             Log::error('JWTMiddleware: Token expirado.', ['exception' => $e->getMessage()]);
@@ -45,6 +46,10 @@ class JWTMiddleware
 
         } catch (JWTException $e) {
             Log::error('JWTMiddleware: Erro JWT.', ['exception' => $e->getMessage()]);
+            return response()->json(['error' => 'Não autorizado'], 401);
+
+        } catch (\Exception $e) {
+            Log::error('Erro inesperado.', ['exception' => $e->getMessage()]);
             return response()->json(['error' => 'Não autorizado'], 401);
         }
 

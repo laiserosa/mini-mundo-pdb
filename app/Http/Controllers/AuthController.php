@@ -15,6 +15,11 @@ class AuthController extends Controller
         return 'cpf';
     }
 
+    public function logar()
+    {
+        return view('login');
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->only('cpf', 'senha');
@@ -39,10 +44,15 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         try {
-            JWTAuth::invalidate(JWTAuth::parseToken());
+            JWTAuth::invalidate($request->bearerToken());
+
             return response()->json(['message' => 'Logout realizado com sucesso']);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            return response()->json(['error' => 'Token expirado.'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return response()->json(['error' => 'Token inválido.'], 401);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Falha no logout'], 500);
+            return response()->json(['error' => 'Falha no logout.'], 500);
         }
     }
 

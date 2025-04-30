@@ -7,13 +7,47 @@ use Illuminate\Http\Request;
 
 class ProjetoController extends Controller
 {
-    public function index()
+    private function verificarPermissao($role)
     {
-        $usuario = auth()->user();
-        \Log::info('Usuário autenticado:', [$usuario]);
+        if ($role !== 'admin') {
+            return response()->json(['message' => 'Apenas administradores tem permissão.'], 403);
+        }
 
+        return null;
+    }
+
+    public function inicio()
+    {
+        return view('projetos');
+    }
+
+    public function index(Request $request)
+    {
         try {
-            $projetos = Projeto::all();
+            $query = Projeto::query();
+
+            // Filtrar por nome
+            if ($request->has('nome') && $request->nome) {
+                $query->where('nome', 'like', '%' . $request->nome . '%');
+            }
+
+            // Filtrar por status
+            if ($request->has('status') && $request->status) {
+                $query->where('status', $request->status);
+            }
+
+            // Filtrar por orçamento (min)
+            if ($request->has('orcamento_min') && $request->orcamento_min) {
+                $query->where('orcamento', '>=', $request->orcamento_min);
+            }
+
+            // Filtrar por orçamento (max)
+            if ($request->has('orcamento_max') && $request->orcamento_max) {
+                $query->where('orcamento', '<=', $request->orcamento_max);
+            }
+
+            // Buscar os projetos filtrados
+            $projetos = $query->get();
             return response()->json($projetos);
         } catch (\Exception $e) {
             return response()->json(['erro' => $e->getMessage()], 401);
@@ -22,6 +56,8 @@ class ProjetoController extends Controller
 
     public function store(Request $request)
     {
+        $this->verificarPermissao($request->role);
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255|unique:projetos,nome',
             'descricao' => 'nullable|string',
@@ -60,6 +96,8 @@ class ProjetoController extends Controller
 
     public function update(Request $request, $id_projeto)
     {
+        $this->verificarPermissao($request->role);
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255|unique:projetos,nome,' . $id_projeto,
             'descricao' => 'nullable|string',
@@ -91,6 +129,8 @@ class ProjetoController extends Controller
 
     public function destroy($id_projeto)
     {
+        $this->verificarPermissao($request->role);
+
         $projeto = Projeto::find($id_projeto);
 
         if (!$projeto) {

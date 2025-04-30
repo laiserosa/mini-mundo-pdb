@@ -6,13 +6,7 @@ use App\Http\Controllers\ProjetoController;
 use App\Http\Controllers\TarefaController;
 
 Route::post('/login', [AuthController::class, 'login']);
-// Route::post('/logout', [AuthController::class, 'logout']);//->middleware('auth:api');
-// Route::post('/saiu', function () {
-//     return response()->json(['message' => 'Logout realizado com sucesso'])
-//                      ->withCookie(cookie()->forget('token'));
-// });
 
-// Route::middleware(['auth.api'])->group(function () {
 Route::middleware(['auth.jwt'])->group(function () {
     Route::get('/usuario', [AuthController::class, 'me']);
     Route::post('logout', [AuthController::class, 'logout']);
@@ -25,6 +19,7 @@ Route::middleware(['auth.jwt'])->group(function () {
 
     Route::get('/tarefas', [TarefaController::class, 'index']);
     Route::post('/tarefas', [TarefaController::class, 'store']);
-    Route::put('/tarefas/{id_tarefa}', [TarefaController::class, 'update']);
-    Route::delete('/tarefas/{id_tarefa}', [TarefaController::class, 'destroy']);
+    Route::get('/tarefas/{id}', [ProjetoController::class, 'show']);
+    Route::put('/tarefas/{id}', [TarefaController::class, 'update']);
+    Route::delete('/tarefas/{id}', [TarefaController::class, 'destroy']);
 });

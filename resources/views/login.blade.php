@@ -32,7 +32,7 @@
 
             if (response.ok) {
                 jwt.saveToken(result.token);
-                window.location.href = "/projetos";
+                window.location.href = "/";
             } else {
                 alert(result.message || 'Falha no login');
             }
