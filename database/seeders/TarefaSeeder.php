@@ -20,40 +20,40 @@ class TarefaSeeder extends Seeder
             [
                 'descricao' => 'Tarefa 1 do Projeto A',
                 'id_projeto' => 1,
-                'data_inicio' => now(),
-                'data_fim' => now()->addDays(5),
+                'data_inicio' => now()->startOfDay(),
+                'data_fim' => now()->addDays(5)->startOfDay(),
                 'id_tarefa_predecessora' => null,
                 'status' => 'concluida'
             ],
             [
                 'descricao' => 'Tarefa 2 do Projeto A',
                 'id_projeto' => 1,
-                'data_inicio' => now()->addDays(6),
-                'data_fim' => now()->addDays(10),
+                'data_inicio' => now()->addDays(6)->startOfDay(),
+                'data_fim' => now()->addDays(10)->startOfDay(),
                 'id_tarefa_predecessora' => 1,
                 'status' => 'nao_concluida'
             ],
             [
                 'descricao' => 'Tarefa 1 do Projeto B',
                 'id_projeto' => 2,
-                'data_inicio' => now(),
-                'data_fim' => now()->addDays(7),
+                'data_inicio' => now()->startOfDay(),
+                'data_fim' => now()->addDays(7)->startOfDay(),
                 'id_tarefa_predecessora' => null,
                 'status' => 'nao_concluida'
             ],
             [
                 'descricao' => 'Tarefa 1 do Projeto C',
                 'id_projeto' => 3,
-                'data_inicio' => now(),
-                'data_fim' => now()->addDays(5),
+                'data_inicio' => now()->startOfDay(),
+                'data_fim' => now()->addDays(5)->startOfDay(),
                 'id_tarefa_predecessora' => null,
                 'status' => 'concluida'
             ],
             [
                 'descricao' => 'Tarefa 2 do Projeto C',
                 'id_projeto' => 3,
-                'data_inicio' => now()->addDays(6),
-                'data_fim' => now()->addDays(12),
+                'data_inicio' => now()->addDays(6)->startOfDay(),
+                'data_fim' => now()->addDays(12)->startOfDay(),
                 'id_tarefa_predecessora' => 4,
                 'status' => 'nao_concluida'
             ],

@@ -10,13 +10,13 @@ class Usuario extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
-    protected $table = 'usuarios';
+    protected $table = 'users';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'cpf',
         'senha',
         'nome',
-        'token',
         'role',
         'status'
     ];

@@ -7,16 +7,20 @@ use App\Http\Controllers\TarefaController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware(['jwt.auth'])->group(function () {
-    Route::get('/usuario', [AuthController::class, 'usuarioAutenticado']);
+Route::middleware(['auth.jwt'])->group(function () {
+    Route::get('/usuario', [AuthController::class, 'me']);
+    Route::post('logout', [AuthController::class, 'logout']);
     
     Route::get('/projetos', [ProjetoController::class, 'index']);
     Route::post('/projetos', [ProjetoController::class, 'store']);
-    Route::put('/projetos/{id_projeto}', [ProjetoController::class, 'update']);
-    Route::delete('/projetos/{id_projeto}', [ProjetoController::class, 'destroy']);
+    Route::get('/projetos/{id}', [ProjetoController::class, 'show']);
+    Route::put('/projetos/{id}', [ProjetoController::class, 'update']);
+    Route::delete('/projetos/{id}', [ProjetoController::class, 'destroy']);
 
+    Route::get('/tarefas/predecessoras', [TarefaController::class, 'predecessoras']);
     Route::get('/tarefas', [TarefaController::class, 'index']);
     Route::post('/tarefas', [TarefaController::class, 'store']);
+    Route::get('/tarefas/{id}', [TarefaController::class, 'show']);
     Route::put('/tarefas/{id}', [TarefaController::class, 'update']);
     Route::delete('/tarefas/{id}', [TarefaController::class, 'destroy']);
 });

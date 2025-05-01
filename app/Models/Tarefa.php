@@ -20,6 +20,7 @@ class Tarefa extends Model
         'status'
     ];
 
+
     public function projeto()
     {
         return $this->belongsTo(Projeto::class, 'id_projeto');

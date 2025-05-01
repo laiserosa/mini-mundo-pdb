@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 </head>
 <body>
-    <h1>Login</h1>
     <form id="loginForm">
+        <h1>Login</h1>
         <input type="text" name="cpf" placeholder="CPF" required>
         <input type="password" name="senha" placeholder="Senha" required>
         <button type="submit">Entrar</button>
@@ -32,7 +33,7 @@
 
             if (response.ok) {
                 jwt.saveToken(result.token);
-                window.location.href = "/projetos";
+                window.location.href = "/";
             } else {
                 alert(result.message || 'Falha no login');
             }
