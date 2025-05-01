@@ -13,7 +13,7 @@
     <ul>
         <li><a href="/projetos">Gerenciar Projetos</a></li>
         <li><a href="/tarefas">Gerenciar Tarefas</a></li>
-        <li><button onclick="logout()">Sair</button></li>
+        <li><a href="#" onclick="logout()" class="btn btn-danger">Logout</a></li>
     </ul>
 
     <script src="{{ asset('js/jwt.js') }}"></script>

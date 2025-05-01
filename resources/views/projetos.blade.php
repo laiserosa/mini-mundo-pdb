@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ asset('css/projetos.css') }}">
 </head>
 <body>
+    @include('menu')
     <h1>Gerenciar Projetos</h1>
 
     <!-- Formulário de Projeto -->
@@ -124,7 +125,7 @@ Container principal com filtro e botão lado a lado
         if (!token) window.location.href = "/login";
 
         const user = jwt.parseJwt(token);
-        const isAdmin = user?.role === 'admin';
+        const isAdmin = user && user.role === 'admin';
 
         async function carregarProjetos(url = apiUrl) {
             const response = await fetch(url, {
@@ -154,7 +155,6 @@ Container principal com filtro e botão lado a lado
                 tbody.appendChild(tr);
             });
 
-            // Esconder o formulário se não for admin
             if (!isAdmin) {
                 document.getElementById('form-container').style.display = 'none';
             }

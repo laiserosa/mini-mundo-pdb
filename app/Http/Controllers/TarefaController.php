@@ -8,6 +8,15 @@ use Illuminate\Support\Facades\Log;
 
 class TarefaController extends Controller
 {
+    private function verificarPermissao($role)
+    {
+        if ($role !== 'admin') {
+            return response()->json(['message' => 'Apenas administradores tem permissão.'], 403);
+        }
+
+        return null;
+    }
+
     public function inicio()
     {
         return view('tarefas');
@@ -39,6 +48,8 @@ class TarefaController extends Controller
 
     public function store(Request $request)
     {
+        $this->verificarPermissao($request->role);
+
         try {
             $validated = $request->validate([
                 'descricao' => 'required|string|max:255',
@@ -62,25 +73,30 @@ class TarefaController extends Controller
     {
         try {
             $tarefa = Tarefa::findOrFail($id);
+            $data_inicio = $tarefa->data_inicio ? \Carbon\Carbon::parse($tarefa->data_inicio) : null;
+            $data_fim = $tarefa->data_fim ? \Carbon\Carbon::parse($tarefa->data_fim) : null;
 
             return response()->json([
                 'id' => $tarefa->id,
                 'descricao' => $tarefa->descricao,
                 'id_projeto' => $tarefa->id_projeto,
-                'data_inicio_input' => $tarefa->data_inicio ? $tarefa->data_inicio->format('Y-m-d') : null,
-                'data_fim_input' => $tarefa->data_fim ? $tarefa->data_fim->format('Y-m-d') : null,
-                'data_inicio_formatada' => $tarefa->data_inicio ? $tarefa->data_inicio->format('d/m/Y') : null,
-                'data_fim_formatada' => $tarefa->data_fim ? $tarefa->data_fim->format('d/m/Y') : null,
+                'data_inicio' => $data_inicio ? $data_inicio->format('Y-m-d') : null,
+                'data_fim' => $data_fim ? $data_fim->format('Y-m-d') : null,
+                'data_inicio_formatada' => $data_inicio ? $data_inicio->format('d/m/Y') : null,
+                'data_fim_formatada' => $data_fim ? $data_fim->format('d/m/Y') : null,
                 'id_tarefa_predecessora' => $tarefa->id_tarefa_predecessora,
                 'status' => $tarefa->status
             ]);
         } catch (\Exception $e) {
+            Log::error('Erro ao mostrar tarefa ID ' . $id . ': ' . $e->getMessage());
             return response()->json(['erro' => 'Tarefa não encontrada'], 404);
         }
     }
 
     public function update(Request $request, $id)
     {
+        $this->verificarPermissao($request->role);
+
         try {
             $tarefa = Tarefa::findOrFail($id);
 
@@ -104,6 +120,8 @@ class TarefaController extends Controller
 
     public function destroy($id)
     {
+        $this->verificarPermissao($request->role);
+
         try {
             $tarefa = Tarefa::findOrFail($id);
 
@@ -117,6 +135,17 @@ class TarefaController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao excluir tarefa ID ' . $id . ': ' . $e->getMessage());
             return response()->json(['error' => 'Não foi possível excluir a tarefa.'], 500);
+        }
+    }
+
+    public function predecessoras()
+    {
+        try {
+            $tarefas = Tarefa::select('id', 'descricao')->orderBy('descricao')->get();
+            return response()->json($tarefas);
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar predecessoras: ' . $e->getMessage());
+            return response()->json(['error' => 'Não foi possível carregar as predecessoras.'], 500);
         }
     }
 }

@@ -15,7 +15,7 @@ ul {
 }
 
 ul li {
-    margin: 10px 0;
+    margin: 20px 0;
 }
 
 a, button {
@@ -30,4 +30,8 @@ a, button {
 
 a:hover, button:hover {
     background-color: #2980b9;
+}
+
+.btn-danger {
+    background-color: #dc3545;
 }

@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ asset('css/tarefas.css') }}">
 </head>
 <body>
+    @include('menu')
     <h1>Gerenciar Tarefas</h1>
 
     <div id="form-container">
@@ -18,11 +19,11 @@
             </label><br>
             <label>Data de Início:
                 <input type="date" id="data_inicio">
-                <span id="data_inicio_formatada" style="margin-left: 10px; font-size: 0.9em; color: gray;"></span>
+                <span id="data_inicio_formatada"></span>
             </label><br>
             <label>Data de Fim:
                 <input type="date" id="data_fim">
-                <span id="data_fim_formatada" style="margin-left: 10px; font-size: 0.9em; color: gray;"></span>
+                <span id="data_fim_formatada"></span>
             </label><br>
             <label>Tarefa Predecessora:
                 <select id="id_tarefa_predecessora">
@@ -81,14 +82,23 @@
     <script src="{{ asset('js/jwt.js') }}"></script>
     <script>
         const token = jwt.getToken();
+        if (!token) window.location.href = "/login";
+
+        const user = jwt.parseJwt(token);
+        const isAdmin = user && user.role === 'admin';
+
         const tarefaUrl = `${window.location.origin}/api/tarefas`;
         const projetoUrl = `${window.location.origin}/api/projetos`;
 
-        if (!token) window.location.href = "/login";
-        const user = jwt.parseJwt(token);
-        const isAdmin = user?.role === 'admin';
+        const formatarData = data => {
+            if (!data) return '';
+            const d = new Date(data);
+            const localDate = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+            console.log('date', d, localDate, 'ret', `${String(localDate.getDate()).padStart(2, '0')}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${localDate.getFullYear()}`);
+            return `${String(localDate.getDate()).padStart(2, '0')}/${String(localDate.getMonth() + 1).padStart(2, '0')}/${localDate.getFullYear()}`;
+        };
 
-        async function carregarProjetosSelect() {
+        const carregarProjetosSelect = async () => {
             const res = await fetch(projetoUrl, { headers: { Authorization: 'Bearer ' + token } });
             const projetos = await res.json();
             const selectProjeto = document.getElementById('id_projeto');
@@ -96,118 +106,100 @@
 
             selectProjeto.innerHTML = '<option value="">Selecione</option>';
             filtroProjeto.innerHTML = '<option value="">Todos</option>';
-            projetos.forEach(proj => {
-                const optionsSelect = new Option(proj.nome, proj.id);
-                const optionsFiltro = new Option(proj.nome, proj.id);
-                selectProjeto.add(optionsSelect);
-                filtroProjeto.add(optionsFiltro);
+
+            projetos.forEach(p => {
+                const opt = new Option(p.nome, p.id);
+                selectProjeto.add(opt.cloneNode(true));
+                filtroProjeto.add(opt);
             });
-        }
+        };
 
-        function formatarDataParaInput(data) {
-            if (!data) return '';
-            const d = new Date(data);
-            const ano = d.getFullYear();
-            const mes = String(d.getMonth() + 1).padStart(2, '0');
-            const dia = String(d.getDate()).padStart(2, '0');
-            return `${ano}-${mes}-${dia}`;
-        }
-
-        function carregarTarefas(tarefas) {
-            const tbody = document.querySelector("#tabela-tarefas tbody");
+        const carregarTarefas = async (url = tarefaUrl) => {
+            const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+            const tarefas = await res.json();
+            const tbody = document.querySelector('#tabela-tarefas tbody');
             tbody.innerHTML = '';
 
-            tarefas.forEach(tarefa => {
-                const dataInicio = formatarDataParaInput(tarefa.data_inicio);
-                const dataFim = formatarDataParaInput(tarefa.data_fim);
-
-                const projetoNome = tarefa.projeto ? tarefa.projeto.nome : tarefa.id_projeto;
-                const predecessora = tarefa.tarefa_predecessora ? tarefa.tarefa_predecessora.descricao : '';
-
+            tarefas.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${tarefa.id}</td>
-                    <td>${tarefa.descricao || ''}</td>
-                    <td>${projetoNome}</td>
-                    <td>${dataInicio}</td>
-                    <td>${dataFim}</td>
-                    <td>${predecessora}</td>
-                    <td>${tarefa.status === 'concluida' ? 'Concluída' : 'Não Concluída'}</td>
+                    <td>${t.id}</td>
+                    <td>${t.descricao}</td>
+                    <td>${t.projeto && t.projeto.nome || ''}</td>
+                    <td>${formatarData(t.data_inicio)}</td>
+                    <td>${formatarData(t.data_fim)}</td>
+                    <td>${t.predecessora && t.predecessora.descricao || ''}</td>
+                    <td>${t.status === 'concluida' ? 'Concluída' : 'Não Concluída'}</td>
                     <td>
-                        <button onclick="editarTarefa(${tarefa.id})">Editar</button>
-                        <button onclick="excluirTarefa(${tarefa.id})">Excluir</button>
+                        ${isAdmin ? `
+                            <button onclick="editarTarefa(${t.id})">Editar</button>
+                            <button onclick="excluirTarefa(${t.id})">Excluir</button>
+                        ` : ''}
                     </td>`;
                 tbody.appendChild(tr);
             });
+        };
+
+        if (!isAdmin) {
+            document.getElementById('form-container').style.display = 'none';
         }
 
-        async function buscarTarefas(url = tarefaUrl) {
-            const res = await fetch(url, {
-                headers: {
-                    Authorization: 'Bearer ' + token
-                }
+        const carregarPredecessoras = async (excluirId = null) => {
+            const res = await fetch(`${tarefaUrl}/predecessoras`, {
+                headers: { Authorization: 'Bearer ' + token }
             });
-
-            if (!res.ok) {
-                alert('Erro ao carregar tarefas');
-                return;
-            }
-
             const tarefas = await res.json();
+            const select = document.getElementById('id_tarefa_predecessora');
+            select.innerHTML = '<option value="">Nenhuma</option>';
 
-            if (!Array.isArray(tarefas)) {
-                console.error('Resposta inválida da API:', tarefas);
-                alert('Erro ao carregar tarefas');
-                return;
-            }
-
-            carregarTarefas(tarefas);
-        }
-
-        async function editarTarefa(id) {
-            const response = await fetch(`/api/tarefas/${id}`, {
-                headers: {
-                    'Authorization': 'Bearer ' + token
+            tarefas.forEach(t => {
+                if (t.id !== excluirId) {
+                    select.add(new Option(t.descricao, t.id));
                 }
             });
+        };
 
-            if (!response.ok) {
-                alert('Erro ao carregar tarefa');
-                return;
-            }
+        const editarTarefa = async id => {
+            const res = await fetch(`${tarefaUrl}/${id}`, {
+                headers: { Authorization: 'Bearer ' + token }
+            });
+            if (!res.ok) return alert('Erro ao carregar tarefa.');
 
-            const tarefa = await response.json();
+            const tarefa = await res.json();
+
+            document.getElementById('form-title').innerText = 'Editar Tarefa';
+            document.getElementById('id').value = tarefa.id;
             document.getElementById('descricao').value = tarefa.descricao;
+            document.getElementById('id_projeto').value = tarefa.id_projeto;
             document.getElementById('status').value = tarefa.status;
+            document.getElementById('data_inicio').value = tarefa.data_inicio;
+            // document.getElementById('data_inicio_formatada').innerText = formatarData(tarefa.data_inicio);
+            document.getElementById('data_fim').value = tarefa.data_fim;
+            // document.getElementById('data_fim_formatada').innerText = formatarData(tarefa.data_fim);
 
-            document.getElementById('data_inicio').value = tarefa.data_inicio_input && /^\d{4}-\d{2}-\d{2}$/.test(tarefa.data_inicio_input)
-                ? tarefa.data_inicio_input
-                : '';
+            await carregarPredecessoras(tarefa.id);
+            document.getElementById('id_tarefa_predecessora').value = tarefa.id_tarefa_predecessora || '';
+        };
 
-            document.getElementById('data_fim').value = tarefa.data_fim_input && /^\d{4}-\d{2}-\d{2}$/.test(tarefa.data_fim_input)
-                ? tarefa.data_fim_input
-                : '';
-
-            document.getElementById('data_inicio_formatada').textContent = tarefa.data_inicio_formatada;
-            document.getElementById('data_fim_formatada').textContent = tarefa.data_fim_formatada;
-        }
-
-        function cancelarEdicao() {
+        const cancelarEdicao = () => {
             document.getElementById('form-title').innerText = 'Nova Tarefa';
             document.getElementById('form-tarefa').reset();
             document.getElementById('id').value = '';
-        }
+            document.getElementById('data_inicio_formatada').innerText = '';
+            document.getElementById('data_fim_formatada').innerText = '';
+            carregarPredecessoras();
+        };
 
-        async function excluirTarefa(id) {
-            if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+        const excluirTarefa = async id => {
+            if (!confirm('Excluir esta tarefa?')) return;
             const res = await fetch(`${tarefaUrl}/${id}`, {
                 method: 'DELETE',
                 headers: { Authorization: 'Bearer ' + token }
             });
             const json = await res.json();
             alert(json.message);
-            buscarTarefas();
-        }
+            carregarTarefas();
+        };
 
         document.getElementById('form-tarefa').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -222,51 +214,64 @@
                 status: document.getElementById('status').value
             };
 
-            let res, json;
             try {
-                res = await fetch(id ? `${tarefaUrl}/${id}` : tarefaUrl, {
-                    method: id ? 'PUT' : 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                });
-                json = await res.json();
+                let res, json;
+                if (id) {
+                    res = await fetch(`${tarefaUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    json = await res.json();
+                    if (!res.ok) throw json;
 
-                if (!res.ok) {
-                    console.error('Erro:', json);
-                    alert(json.message || 'Erro ao salvar tarefa');
-                    return;
+                    alert('Tarefa atualizada!');
+                } else {
+                    res = await fetch(tarefaUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': 'Bearer ' + token,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+                    json = await res.json();
+                    if (!res.ok) throw json;
+
+                    alert('Tarefa criada!');
                 }
 
-                alert(id ? 'Tarefa atualizada!' : 'Tarefa criada!');
                 cancelarEdicao();
-                buscarTarefas();
+                carregarTarefas();
             } catch (err) {
-                console.error('Erro inesperado:', err);
-                alert('Erro inesperado ao salvar tarefa.');
+                alert(err.message || 'Erro ao salvar.');
             }
         });
 
         document.getElementById('filtro-form').addEventListener('submit', async function (e) {
             e.preventDefault();
-            const descricao = document.getElementById('filtro-descricao').value;
-            const id_projeto = document.getElementById('filtro-projeto').value;
-            const status = document.getElementById('filtro-status').value;
-
             const url = new URL(tarefaUrl);
             const params = new URLSearchParams();
-            if (descricao) params.append('descricao', descricao);
-            if (id_projeto) params.append('id_projeto', id_projeto);
-            if (status) params.append('status', status);
-            url.search = params.toString();
 
-            buscarTarefas(url);
+            const filtroDescricao = document.getElementById('filtro-descricao').value;
+            const filtroProjeto = document.getElementById('filtro-projeto').value;
+            const filtroStatus = document.getElementById('filtro-status').value;
+
+            if (filtroDescricao) params.append('descricao', filtroDescricao);
+            if (filtroProjeto) params.append('id_projeto', filtroProjeto);
+            if (filtroStatus) params.append('status', filtroStatus);
+
+            url.search = params.toString();
+            carregarTarefas(url);
         });
 
+
         carregarProjetosSelect();
-        buscarTarefas();
+        carregarTarefas();
+        carregarPredecessoras();
     </script>
 </body>
 </html>
